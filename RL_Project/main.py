@@ -1,23 +1,17 @@
-import gymnasium as gym
-from stable_baselines3 import PPO
+from train import train_model
+from evaluate import evaluate_model
+from stable_baselines3 import DQN
 
 
-# Create the environment
-env = gym.make("ALE/Seaquest-v5")
+if __name__ == "__main__":
+    # Train the model
+    model_path = train_model()
 
-# Create the RL model
-model = PPO("CnnPolicy", env, verbose=1)
+    # get/load model
+    model = DQN.load(model_path)
 
-# Train the model for 1000 steps
-model.learn(total_timesteps=1000)
-
-vec_env = model.get_env()
-obs = vec_env.reset()
-for i in range(1000):
-    action, _state = model.predict(obs, deterministic=True)
-    obs, reward, done, info = vec_env.step(action)
-
-
+    # Evaluate the model
+    evaluate_model(model)
 
 
 
