@@ -3,7 +3,7 @@ from stable_baselines3 import PPO
 
 
 # Create the environment
-env = gym.make("ALE/Seaquest-v5", render_mode='human')
+env = gym.make("ALE/Seaquest-v5")
 
 # Create the RL model
 model = PPO("CnnPolicy", env, verbose=1)
@@ -16,7 +16,6 @@ obs = vec_env.reset()
 for i in range(1000):
     action, _state = model.predict(obs, deterministic=True)
     obs, reward, done, info = vec_env.step(action)
-    vec_env.render("human")
 
 
 
