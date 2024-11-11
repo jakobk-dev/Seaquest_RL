@@ -7,7 +7,7 @@ from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from torch import optim
 
 class CategoricalNetwork(nn.Module):
-    def __init__(self, observation_space, action_space, n_atoms=81, v_min=-100, v_max=100):
+    def __init__(self, observation_space, action_space, n_atoms=51, v_min=-10, v_max=10):
         super().__init__()
         
         n_input_channels = observation_space.shape[0]
@@ -65,7 +65,7 @@ class CategoricalPolicy(BasePolicy):
         observation_space,
         action_space,
         lr_schedule,
-        n_atoms=81,
+        n_atoms=51,
         net_arch=None,
         activation_fn=nn.ReLU,
         features_extractor_class=CategoricalNetwork,
@@ -120,9 +120,9 @@ class CategoricalDQN(DQN):
         self,
         policy,
         env,
-        n_atoms=81,
-        v_min=-100.0,
-        v_max=100.0,
+        n_atoms=51,
+        v_min=-10.0,
+        v_max=10.0,
         learning_rate=1e-4,
         buffer_size=30000,
         batch_size = 128,
@@ -209,6 +209,7 @@ class CategoricalDQN(DQN):
               l[(u > 0) * (l == u)] -= 1
               u[(l < (self.n_atoms - 1)) * (l == u)] += 1
 
+              # Distribution update
               # initialize target distribution
               m = torch.zeros_like(target_distributions)
               # offset for batch for correctly distributing probabilities to current atom in the flatten tensor
@@ -224,9 +225,9 @@ class CategoricalDQN(DQN):
           actions = replay_data.actions.long().flatten().to(self.device)
           current_distribution = current_state_distributions[torch.arange(batch_size, device=self.device), actions]
 
-          # compute cross-entropy loss between current distribution and target distribtion m 
+          # compute cross entropy loss between current distribution and target distribtion m 
           loss = -(m * torch.log(current_distribution + 1e-8)).sum(dim=1).mean()
-
+          
           # optimize the policy
           self.policy.optimizer.zero_grad()
           loss.backward()

@@ -3,6 +3,7 @@ import gymnasium as gym
 from stable_baselines3 import DQN
 from algorithms.categorical_dqn import create_categorical_dqn
 from algorithms.noisy_dqn import create_noisy_dqn
+from algorithms.noisy_categorical_dqn import create_noisy_categorical_dqn
 import os
 import torch
 import torch.optim as optim
@@ -45,7 +46,7 @@ def train_categorical_dqn(env):
   # range (-10 to 10) 51 atoms
   # range (-50 to 50) 51 atoms
   # range (-100 to 100) 81 atoms 
-  model = create_categorical_dqn(env, n_atoms=81, v_min=-100, v_max=100, verbose=1)
+  model = create_categorical_dqn(env, n_atoms=51, v_min=-10, v_max=10, verbose=1)
 
 
   # Train the model
@@ -86,5 +87,24 @@ def train_noisy_dqn(env):
 
   return model_path 
 
+def train_noisy_categorical_dqn(env):
 
+  model = create_noisy_categorical_dqn(env, n_atoms=51, v_min=-10, v_max=10, verbose=1)
+
+  # Train the model
+  model.learn(total_timesteps=60000) 
+
+  # Define the path to the models directory
+  models_dir = "/content/drive/MyDrive/models"
+
+  # Ensure the models directory exists
+  os.makedirs(models_dir, exist_ok=True)
+
+  # Save model
+  model_path = os.path.join(models_dir, "noisy_categorical_dqn_seaquest")
+  model.save(model_path)
+
+  print(f"Model saved to {model_path}")
+
+  return model_path
  
