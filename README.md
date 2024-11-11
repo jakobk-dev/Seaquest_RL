@@ -4,7 +4,7 @@
 
 This repository contains implementations of several DQN variants:
 
-- **DQN** (using Stable-Baseline3)
+- **DQN** (using Stable-Baseline3 as foundation for variants)
 - **Categorical DQN (C51)**
 - **NoisyNet DQN**
 - **NoisyNet/Categorical DQN** (combined variant using NoisyNet and C51)
