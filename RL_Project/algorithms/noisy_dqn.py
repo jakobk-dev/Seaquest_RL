@@ -180,6 +180,7 @@ class NoisyDQN(DQN):
         exploration_initial_eps=0.0,  # not used for noisy
         exploration_final_eps=0.0,  # not used for noisy
         max_grad_norm=10,
+        tensorboard_log=None, 
         policy_kwargs=None,
         verbose=1,
         device='auto',
@@ -199,6 +200,7 @@ class NoisyDQN(DQN):
             exploration_initial_eps=exploration_initial_eps,
             exploration_final_eps=exploration_final_eps,
             max_grad_norm=max_grad_norm,
+            tensorboard_log=tensorboard_log, 
             policy_kwargs=policy_kwargs,
             verbose=verbose,
             device=device,

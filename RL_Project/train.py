@@ -6,23 +6,77 @@ import torch.optim as optim
 import torch.nn.functional as F
 from stable_baselines3.common.buffers import ReplayBuffer
 import numpy as np
+from stable_baselines3.common.logger import configure
+from stable_baselines3.common.monitor import Monitor
+from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback
+from stable_baselines3.common.vec_env import DummyVecEnv, VecTransposeImage
 
-def train_dqn(model, env, total_timesteps=200000, model_name="model"):
+def setup_logging_and_monitoring(model_name, base_path="/content/drive/MyDrive"):
+    """
+    Configure logging and monitoring
+    
+    Args:
+        model_name: Name of the model being trained
+        base_path: Base directory for all outputs
+    Returns:
+        tuple: (eval callback, checkpoint callback, logger)
+    """
+    # Create directory structure
+    log_dir = os.path.join(base_path, "logs", model_name)
+    model_dir = os.path.join(base_path, "models", model_name)
+    eval_dir = os.path.join(base_path, "eval", model_name)
+    
+    for d in [log_dir, model_dir, eval_dir]:
+        os.makedirs(d, exist_ok=True)
 
+    # Configure the logger
+    new_logger = configure(log_dir, ["stdout", "csv", "tensorboard", "json"])
+
+    # # Create evaluation environment
+    eval_env = gym.make("ALE/Seaquest-v5")
+    eval_env = Monitor(eval_env, os.path.join(eval_dir, "monitor"))
+    eval_env = DummyVecEnv([lambda: eval_env])
+    eval_env = VecTransposeImage(eval_env)
+
+    # Setup callbacks
+    eval_callback = EvalCallback(
+        eval_env,
+        best_model_save_path=model_dir,
+        log_path=eval_dir,
+        eval_freq=25000,
+        deterministic=True,
+        render=False
+    )
+
+    checkpoint_callback = CheckpointCallback(
+        save_freq=10000,
+        save_path=model_dir,
+        name_prefix=model_name
+    )
+
+    return eval_callback, checkpoint_callback, new_logger
+
+def train_and_eval_dqn(model, env, total_timesteps=60000, model_name="model"):
+    """
+    Train model with logging and monitoring
+    """
+    # Setup logging and callbacks
+    eval_callback, checkpoint_callback, new_logger = setup_logging_and_monitoring(model_name)
+    
+    # Set logger for model
+    model.set_logger(new_logger)
+    
     # Train the model
-    model.learn(total_timesteps=total_timesteps) 
+    model.learn(
+        total_timesteps=total_timesteps,
+        callback=[eval_callback, checkpoint_callback],
+        progress_bar=True
+    )
 
-    # Define the path to the models directory
+    # Save final model
     models_dir = "/content/drive/MyDrive/models"
-
-    # Ensure the models directory exists
     os.makedirs(models_dir, exist_ok=True)
-
-    # Save model
-    model_path = os.path.join(models_dir, f"{model_name}")
+    model_path = os.path.join(models_dir, model_name)
     model.save(model_path)
 
-    print(f"Model saved to {model_path}")
-
-    return model_path 
- 
+    return model_path
