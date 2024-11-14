@@ -1,4 +1,3 @@
-
 import gymnasium as gym
 import os
 import torch
@@ -10,17 +9,9 @@ from stable_baselines3.common.logger import configure
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback
 from stable_baselines3.common.vec_env import DummyVecEnv, VecTransposeImage
+from main import create_env
 
 def setup_logging_and_monitoring(model_name, base_path="/content/drive/MyDrive"):
-    """
-    Configure logging and monitoring
-    
-    Args:
-        model_name: Name of the model being trained
-        base_path: Base directory for all outputs
-    Returns:
-        tuple: (eval callback, checkpoint callback, logger)
-    """
     # Create directory structure
     log_dir = os.path.join(base_path, "logs", model_name)
     model_dir = os.path.join(base_path, "models", model_name)
@@ -33,10 +24,8 @@ def setup_logging_and_monitoring(model_name, base_path="/content/drive/MyDrive")
     new_logger = configure(log_dir, ["stdout", "csv", "tensorboard", "json"])
 
     # # Create evaluation environment
-    eval_env = gym.make("ALE/Seaquest-v5")
-    eval_env = Monitor(eval_env, os.path.join(eval_dir, "monitor"))
-    eval_env = DummyVecEnv([lambda: eval_env])
-    eval_env = VecTransposeImage(eval_env)
+    eval_env = create_env(os.path.join(eval_dir, "monitor"))
+
 
     # Setup callbacks
     eval_callback = EvalCallback(
@@ -45,7 +34,8 @@ def setup_logging_and_monitoring(model_name, base_path="/content/drive/MyDrive")
         log_path=eval_dir,
         eval_freq=25000,
         deterministic=True,
-        render=False
+        render=False,
+        n_eval_episodes = 4
     )
 
     checkpoint_callback = CheckpointCallback(
@@ -56,10 +46,7 @@ def setup_logging_and_monitoring(model_name, base_path="/content/drive/MyDrive")
 
     return eval_callback, checkpoint_callback, new_logger
 
-def train_and_eval_dqn(model, env, total_timesteps=60000, model_name="model"):
-    """
-    Train model with logging and monitoring
-    """
+def train_and_eval_dqn(model, env, total_timesteps=20000, model_name="model"):
     # Setup logging and callbacks
     eval_callback, checkpoint_callback, new_logger = setup_logging_and_monitoring(model_name)
     
