@@ -22,12 +22,11 @@ The project is organized as follows:
 │   ├── noisy_dqn.py             # NoisyNet DQN implementation
 │   └── noisy_categorical_dqn.py # Combined variant using NoisyNet and C51
 ├── train.py                     # Training script
-├── evaluate.py                  # Evaluation script
 └── main.py                      # Main entry point
 ```
 ## Prerequisites
 
-- **Python**: 3.7 or higher
+- **Python**: 3.10.12
 
 ## Required Libraries
 
