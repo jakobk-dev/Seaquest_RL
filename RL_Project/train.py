@@ -9,7 +9,20 @@ from stable_baselines3.common.logger import configure
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback
 from stable_baselines3.common.vec_env import DummyVecEnv, VecTransposeImage
-from main import create_env
+from stable_baselines3.common.atari_wrappers import AtariWrapper, EpisodicLifeEnv, FireResetEnv
+from stable_baselines3.common.vec_env import VecFrameStack
+
+def create_env(log_path):
+    env = gym.make("ALE/Seaquest-v5")
+    env = AtariWrapper(env)
+    env = EpisodicLifeEnv(env)
+    env = FireResetEnv(env)
+    env = Monitor(env, log_path)
+    env = DummyVecEnv([lambda: env])
+    env = VecFrameStack(env, n_stack=4)
+    env = VecTransposeImage(env)
+    return env
+
 
 def setup_logging_and_monitoring(model_name, base_path="/content/drive/MyDrive"):
     # Create directory structure
