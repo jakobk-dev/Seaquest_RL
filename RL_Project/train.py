@@ -1,4 +1,5 @@
 import gymnasium as gym
+import ale_py
 import os
 import torch
 import torch.optim as optim
@@ -13,6 +14,7 @@ from stable_baselines3.common.atari_wrappers import AtariWrapper, EpisodicLifeEn
 from stable_baselines3.common.vec_env import VecFrameStack
 
 def create_env(log_path):
+    gym.register_envs(ale_py)
     env = gym.make("ALE/Seaquest-v5")
     env = AtariWrapper(env)
     env = EpisodicLifeEnv(env)
@@ -24,11 +26,11 @@ def create_env(log_path):
     return env
 
 
-def setup_logging_and_monitoring(model_name, base_path="/content/drive/MyDrive"):
+def setup_logging_and_monitoring(model_name):
     # Create directory structure
-    log_dir = os.path.join(base_path, "logs", model_name)
-    model_dir = os.path.join(base_path, "models", model_name)
-    eval_dir = os.path.join(base_path, "eval", model_name)
+    log_dir = os.path.join("logs", model_name)
+    model_dir = os.path.join("/content/drive/MyDrive", "models", model_name)
+    eval_dir = os.path.join("logs", "eval", model_name)
     
     for d in [log_dir, model_dir, eval_dir]:
         os.makedirs(d, exist_ok=True)

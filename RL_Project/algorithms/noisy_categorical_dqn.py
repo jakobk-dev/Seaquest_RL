@@ -186,7 +186,7 @@ class NoisyCategoricalDQN(DQN):
         gamma=0.99,
         train_freq=4,
         gradient_steps=1,
-        target_update_interval=5000,
+        target_update_interval=10000,
         exploration_fraction=0.0,  # Not used with noisy nets
         exploration_initial_eps=0.0,  # Not used with noisy nets
         exploration_final_eps=0.0,  # Not used with noisy nets
