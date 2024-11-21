@@ -7,7 +7,7 @@ plt.rcParams['figure.figsize'] = [12, 8]
 plt.rcParams['figure.dpi'] = 100
 plt.rcParams['axes.grid'] = True
 
-def plot_metrics(csv_path, save_dir='plots'):
+def plot_metrics(csv_path, save_dir='plots', plot_title = 'Default', plot_file_name = 'Default'):
     """
     Plot training and evaluation metrics from CSV file
     """
@@ -15,7 +15,7 @@ def plot_metrics(csv_path, save_dir='plots'):
     df = pd.read_csv(csv_path)
         
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
-    fig.suptitle('Noisy DQN Training and Evaluation Analysis', fontsize=16) 
+    fig.suptitle(plot_title, fontsize=16) 
     ax1.plot(df['time/total_timesteps'], df['rollout/ep_rew_mean'], 
                  label='Training Reward', color='blue', alpha=0.6)
         
@@ -47,7 +47,7 @@ def plot_metrics(csv_path, save_dir='plots'):
         
     plt.tight_layout()
         
-    save_path = os.path.join(save_dir, 'noisy_dqn_2_results_graph.png')
+    save_path = os.path.join(save_dir, plot_file_name)
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.show()
         
