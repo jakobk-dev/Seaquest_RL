@@ -235,7 +235,7 @@ class NoisyCategoricalDQN(DQN):
         self.support = torch.linspace(v_min, v_max, n_atoms).to(self.device)
         self.delta_z = (v_max - v_min) / (n_atoms - 1)
 
-    def train(self, gradient_steps: int, batch_size: int = 128) -> None:
+    def train(self, gradient_steps: int, batch_size: int = 32) -> None:
         self.policy.set_training_mode(True)
 
         for _ in range(gradient_steps):

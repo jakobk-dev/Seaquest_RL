@@ -15,7 +15,7 @@ def plot_metrics(csv_path, save_dir='plots'):
     df = pd.read_csv(csv_path)
         
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
-    fig.suptitle('C51 DQN Training and Evaluation Analysis', fontsize=16) 
+    fig.suptitle('Noisy DQN Training and Evaluation Analysis', fontsize=16) 
     ax1.plot(df['time/total_timesteps'], df['rollout/ep_rew_mean'], 
                  label='Training Reward', color='blue', alpha=0.6)
         
@@ -47,7 +47,7 @@ def plot_metrics(csv_path, save_dir='plots'):
         
     plt.tight_layout()
         
-    save_path = os.path.join(save_dir, 'c51_dqn_1_results_graph.png')
+    save_path = os.path.join(save_dir, 'noisy_dqn_2_results_graph.png')
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.show()
         
