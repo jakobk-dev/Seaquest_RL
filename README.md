@@ -4,10 +4,10 @@
 
 This repository contains implementations of several DQN variants:
 
-- **DQN** (using Stable-Baseline3 as foundation for variants)
-- **Categorical DQN (C51)**
-- **NoisyNet DQN**
-- **NoisyNet/Categorical DQN** (combined variant using NoisyNet and C51)
+- **DQN** (using Stable-Baseline3 as foundation for variants) -> baseline
+- **Categorical DQN (C51)** -> categorical
+- **NoisyNet DQN** -> noisy
+- **NoisyNet/Categorical DQN** (combined variant using NoisyNet and C51) -> noisy_categorical
 - **Dynamic Action Repetition DQN** -> dar
 - **Double Q-Learning DQN** -> double
 - **Dynamic Frame Skip DQN** -> dfdqn
@@ -16,6 +16,13 @@ This repository contains implementations of several DQN variants:
 
 ---
 
+To run the code:
+
+`python3 main.py [algorithm]`
+
+The algorithm after main.py would be dar, rainbow, per, dfdqn, and so on. For example this would be running categorical DQN:
+
+`python3 main.py categorical`
 
 ## Project Structure
 
