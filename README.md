@@ -30,12 +30,16 @@ The project is organized as follows:
 
 ```plaintext
 ├── algorithms/
-│   ├── categorical_dqn.py       # C51 implementation
-│   ├── noisy_dqn.py             # NoisyNet DQN implementation
-│   └── noisy_categorical_dqn.py # Combined variant using NoisyNet and C51
-│   └── *.py # All other algorithm python files are in this folder
-├── train.py                     # Training script
-└── main.py                      # Main entry point
+│   ├── categorical_dqn.py                 # C51 implementation
+│   ├── double_dqn.py
+│   ├── dynamic_action_repetition_dqn.py
+│   ├── dynamic_frame_skip_dqn.py 
+│   ├── noisy_categorical_dqn.py           # Combined variant using NoisyNet and C51
+│   ├── noisy_dqn.py                       # NoisyNet DQN implementation
+│   ├── per_dqn.py                         # Prioritized Experience Replay DQN
+│   └── rainbow_dqn.py
+├── train.py                               # Training script
+└── main.py                                # Main entry point
 ```
 ## Prerequisites
 
