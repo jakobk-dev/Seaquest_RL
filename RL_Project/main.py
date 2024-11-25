@@ -70,6 +70,7 @@ def main(dqn_type):
         plot_file_name = "dar_dqn_results_graph.png"
     else:
         print(f"Invalid DQN type: {dqn_type}")
+        print("Type of DQN to run \nbaseline, categorical, noisy, noisy_categorical, dfdqn, rainbow, double, per, or dar")
         return
 
     model_path = train_and_eval_dqn(model, env, total_timesteps=200000, model_name=model_name) # Increase timesteps as needed
