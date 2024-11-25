@@ -1,0 +1,16 @@
+{"rollout/exploration_rate": 0.0, "time/episodes": 4, "rollout/ep_rew_mean": 0.25, "rollout/ep_len_mean": 16.5, "time/fps": 200, "time/time_elapsed": 0, "time/total_timesteps": 66}
+{"rollout/exploration_rate": 0.0, "time/episodes": 8, "rollout/ep_rew_mean": 0.25, "rollout/ep_len_mean": 1692.375, "time/fps": 116, "time/time_elapsed": 116, "time/total_timesteps": 13539}
+{"rollout/exploration_rate": 0.0, "eval/mean_reward": 0.0, "eval/mean_ep_length": 6743.5, "time/total_timesteps": 25000}
+{"rollout/exploration_rate": 0.0, "time/episodes": 12, "rollout/ep_rew_mean": 0.16666666666666666, "rollout/ep_len_mean": 3376.4166666666665, "time/fps": 87, "time/time_elapsed": 462, "time/total_timesteps": 40517}
+{"rollout/exploration_rate": 0.0, "eval/mean_reward": 0.0, "eval/mean_ep_length": 6743.5, "time/total_timesteps": 50000}
+{"rollout/exploration_rate": 0.0, "time/episodes": 16, "rollout/ep_rew_mean": 0.125, "rollout/ep_len_mean": 4217.875, "time/fps": 84, "time/time_elapsed": 803, "time/total_timesteps": 67486}
+{"rollout/exploration_rate": 0.0, "eval/mean_reward": 0.0, "eval/mean_ep_length": 6744.0, "time/total_timesteps": 75000}
+{"rollout/exploration_rate": 0.0, "time/episodes": 20, "rollout/ep_rew_mean": 0.1, "rollout/ep_len_mean": 4722.85, "time/fps": 82, "time/time_elapsed": 1140, "time/total_timesteps": 94457}
+{"rollout/exploration_rate": 0.0, "eval/mean_reward": 0.0, "eval/mean_ep_length": 6742.25, "time/total_timesteps": 100000}
+{"rollout/exploration_rate": 0.0, "time/episodes": 24, "rollout/ep_rew_mean": 0.08333333333333333, "rollout/ep_len_mean": 5059.583333333333, "time/fps": 81, "time/time_elapsed": 1481, "time/total_timesteps": 121430}
+{"rollout/exploration_rate": 0.0, "eval/mean_reward": 0.0, "eval/mean_ep_length": 6743.0, "time/total_timesteps": 125000}
+{"rollout/exploration_rate": 0.0, "time/episodes": 28, "rollout/ep_rew_mean": 0.07142857142857142, "rollout/ep_len_mean": 5300.285714285715, "time/fps": 81, "time/time_elapsed": 1828, "time/total_timesteps": 148408}
+{"rollout/exploration_rate": 0.0, "eval/mean_reward": 0.0, "eval/mean_ep_length": 6741.5, "time/total_timesteps": 150000}
+{"rollout/exploration_rate": 0.0, "eval/mean_reward": 0.0, "eval/mean_ep_length": 6741.25, "time/total_timesteps": 175000}
+{"rollout/exploration_rate": 0.0, "time/episodes": 32, "rollout/ep_rew_mean": 0.0625, "rollout/ep_len_mean": 5480.5625, "time/fps": 76, "time/time_elapsed": 2288, "time/total_timesteps": 175378}
+{"rollout/exploration_rate": 0.0, "eval/mean_reward": 0.0, "eval/mean_ep_length": 6742.5, "time/total_timesteps": 200000}
