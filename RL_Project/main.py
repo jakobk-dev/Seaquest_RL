@@ -5,9 +5,9 @@ from algorithms.categorical_dqn import create_categorical_dqn
 from algorithms.noisy_dqn import create_noisy_dqn
 from algorithms.noisy_categorical_dqn import create_noisy_categorical_dqn
 from algorithms.dynamic_frame_skip_dqn import create_dynamic_frame_skip_dqn
-from algorithms.rainbow_dqn import create_rainbow_dqn
+# from algorithms.rainbow_dqn import create_rainbow_dqn
 from algorithms.double_dqn import create_double_dqn
-from algorithms.per_dqn import create_per_dqn
+# from algorithms.per_dqn import create_per_dqn
 from algorithms.dynamic_action_repetition_dqn import create_dynamic_action_repetition_dqn
 import os
 from plotting import plot_metrics
@@ -48,21 +48,21 @@ def main(dqn_type):
         model_name = "dfdqn_model"
         plot_title = "Dynamic Frame Skip DQN Training and Evaluation Analysis"
         plot_file_name = "dfdqn_results_graph.png"
-    elif dqn_type == "rainbow":
-        model = create_rainbow_dqn(env, n_atoms=51, v_min=-10, v_max=10, batch_size=32, tensorboard_log="/content/drive/MyDrive/logs/tensorboard", verbose=1)
-        model_name = "rainbow_dqn_model"
-        plot_title = "Rainbow DQN Training and Evaluation Analysis"
-        plot_file_name = "rainbow_dqn_results_graph.png"
+    # elif dqn_type == "rainbow":
+    #     model = create_rainbow_dqn(env, n_atoms=51, v_min=-10, v_max=10, batch_size=32, tensorboard_log="/content/drive/MyDrive/logs/tensorboard", verbose=1)
+    #     model_name = "rainbow_dqn_model"
+    #     plot_title = "Rainbow DQN Training and Evaluation Analysis"
+    #     plot_file_name = "rainbow_dqn_results_graph.png"
     elif dqn_type == "double":
         model = create_double_dqn(env, batch_size=32, tensorboard_log="/content/drive/MyDrive/logs/tensorboard", verbose=1)
         model_name = "double_dqn_model"
         plot_title = "Double Q-Learning DQN Training and Evaluation Analysis"
         plot_file_name = "double_dqn_results_graph.png"
-    elif dqn_type == "per":
-        model = create_per_dqn(env, batch_size=32, tensorboard_log="/content/drive/MyDrive/logs/tensorboard", verbose=1)
-        model_name = "per_dqn_model"
-        plot_title = "Prioritized Experience Replay DQN Training and Evaluation Analysis"
-        plot_file_name = "per_dqn_results_graph.png"
+    # elif dqn_type == "per":
+    #     model = create_per_dqn(env, batch_size=32, tensorboard_log="/content/drive/MyDrive/logs/tensorboard", verbose=1)
+    #     model_name = "per_dqn_model"
+    #     plot_title = "Prioritized Experience Replay DQN Training and Evaluation Analysis"
+    #     plot_file_name = "per_dqn_results_graph.png"
     elif dqn_type == "dar":
         model = create_dynamic_action_repetition_dqn(env, batch_size=32, tensorboard_log="/content/drive/MyDrive/logs/tensorboard", verbose=1)
         model_name = "dar_dqn_model"
