@@ -50,4 +50,10 @@ The project is organized as follows:
 To get started, install the following libraries:
 
 ```bash
-pip install gymnasium[atari] stable-baselines3[extra] torch numpy
+pip install ale-py
+pip install gymnasium[atari]
+pip install stable-baselines3[extra]
+pip install torch numpy
+pip install pandas matplotlib
+pip install gymnasium[accept-rom-license]
+pip install autorom[accept-rom-license]
