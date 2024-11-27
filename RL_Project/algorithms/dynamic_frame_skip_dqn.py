@@ -1,33 +1,64 @@
+import gym
 import torch
 import torch.nn.functional as F
 from stable_baselines3 import DQN
 from stable_baselines3.common.policies import BasePolicy
-from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
-from torch import optim
-import numpy as np
+
+
+class FrameSkipEnvWrapper(gym.Wrapper):
+    """
+    Gym environment wrapper that allows dynamic adjustment of the frame skip.
+    """
+    def __init__(self, env, initial_frame_skip=1):
+        super(FrameSkipEnvWrapper, self).__init__(env)
+        self.frame_skip = initial_frame_skip
+
+    def set_frame_skip(self, frame_skip):
+        """
+        Dynamically set the frame skip value.
+        """
+        self.frame_skip = frame_skip
+
+    def step(self, action):
+        """
+        Repeat the action for the current frame skip number of times.
+        """
+        total_reward = 0.0
+        done = False
+        info = {}
+        for _ in range(self.frame_skip):
+            obs, reward, done, info = self.env.step(action)
+            total_reward += reward
+            if done:
+                break
+        return obs, total_reward, done, info
+
+    def reset(self):
+        return self.env.reset()
+
 
 class DynamicFrameSkipDQN(DQN):
     """
-    Dynamic Frame Skip DQN modifies the interaction with the environment to 
-    adjust the frame skip dynamically based on performance.
+    DQN implementation with dynamic frame skipping.
+    Adjusts the frame skip dynamically during training based on the TD error.
     """
     def __init__(
         self,
         policy,
         env,
-        min_frame_skip=2,
-        max_frame_skip=8,
-        frame_skip_adjustment_factor=0.05,
-        evaluation_window=1000,
+        initial_frame_skip=1,
+        max_frame_skip=4,
+        frame_skip_increment=1,
+        td_error_threshold=1.0,
         learning_rate=1e-4,
-        buffer_size=30000,
-        batch_size=32,
+        buffer_size=50000,
+        batch_size=64,
         tau=1.0,
         gamma=0.99,
         train_freq=4,
         gradient_steps=1,
         target_update_interval=10000,
-        exploration_fraction=0.3,
+        exploration_fraction=0.1,
         exploration_initial_eps=1.0,
         exploration_final_eps=0.05,
         max_grad_norm=10,
@@ -58,74 +89,63 @@ class DynamicFrameSkipDQN(DQN):
             device=device,
             _init_setup_model=_init_setup_model,
         )
-
-        # Dynamic frame skip parameters
-        self.min_frame_skip = min_frame_skip
+        self.current_frame_skip = initial_frame_skip
         self.max_frame_skip = max_frame_skip
-        self.frame_skip_adjustment_factor = frame_skip_adjustment_factor
-        self.evaluation_window = evaluation_window
+        self.frame_skip_increment = frame_skip_increment
+        self.td_error_threshold = td_error_threshold
 
-        self.current_frame_skip = min_frame_skip
-        self.cumulative_rewards = []
-        self.previous_avg_reward = None
-
-    def _dynamic_frame_skip_update(self, reward):
+    def train(self, gradient_steps: int, batch_size: int = 64) -> None:
         """
-        Adjust frame skip dynamically based on reward performance.
+        Override the DQN train method to implement Dynamic Frame Skipping based on TD error.
         """
-        self.cumulative_rewards.append(reward)
-
-        # Only evaluate every `evaluation_window` steps
-        if len(self.cumulative_rewards) >= self.evaluation_window:
-            avg_reward = np.mean(self.cumulative_rewards[-self.evaluation_window:])
-            if self.previous_avg_reward is not None:
-                if avg_reward > self.previous_avg_reward:
-                    self.current_frame_skip = min(
-                        self.current_frame_skip + 1, self.max_frame_skip
-                    )
-                else:
-                    self.current_frame_skip = max(
-                        self.current_frame_skip - 1, self.min_frame_skip
-                    )
-            self.previous_avg_reward = avg_reward
-
-    def collect_rollouts(self, env, callback, train_freq, replay_buffer, action_noise=None, learning_starts=0):
-        """
-        Modified to include dynamic frame skipping during rollouts.
-        """
-        n_steps = 0
-        action_noise = self.policy.action_noise if action_noise is None else action_noise
-
-        while n_steps < train_freq:
-            # Reset environment if done
-            if self._last_obs is None:
-                self._last_obs = env.reset()
-
-            # Predict next action
+        self.policy.set_training_mode(True)
+    
+        for _ in range(gradient_steps):
+            # Sample replay buffer
+            replay_data = self.replay_buffer.sample(batch_size, env=self._vec_normalize_env)
+    
             with torch.no_grad():
-                action, buffer_action = self.predict(self._last_obs, deterministic=False)
+                # Compute the target Q-values
+                next_q_values = self.policy.q_net_target(replay_data.next_observations).max(1)[0].reshape(-1, 1)
+                # Compute the TD target
+                target_q_values = replay_data.rewards + (1 - replay_data.dones) * self.gamma * next_q_values
+    
+            # Get current Q-values estimates
+            current_q_values = self.policy.q_net(replay_data.observations).gather(1, replay_data.actions)
+    
+            # Compute the TD error
+            td_errors = target_q_values - current_q_values
+            td_error_mean = td_errors.abs().mean().item()
+    
+            # Compute the loss
+            loss = F.smooth_l1_loss(current_q_values, target_q_values)
+    
+            # Optimize the policy
+            self.policy.optimizer.zero_grad()
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
+            self.policy.optimizer.step()
+    
+            # Update target network
+            if self._n_calls % self.target_update_interval == 0:
+                self.policy.q_net_target.load_state_dict(self.policy.q_net.state_dict())
+    
+            # Adjust frame skip based on TD error
+            if td_error_mean > self.td_error_threshold and self.current_frame_skip < self.max_frame_skip:
+                self.current_frame_skip += self.frame_skip_increment
+            elif td_error_mean < self.td_error_threshold and self.current_frame_skip > 1:
+                self.current_frame_skip -= self.frame_skip_increment
+    
+            # Update the environment's frame skip
+            if hasattr(self.env, 'set_frame_skip'):
+                self.env.set_frame_skip(self.current_frame_skip)
+            elif hasattr(self.env.envs[0], 'set_frame_skip'):
+                # For vectorized environments
+                for env in self.env.envs:
+                    env.set_frame_skip(self.current_frame_skip)
+    
+        self._n_calls += gradient_steps
 
-            # Take action with dynamic frame skipping
-            cumulative_reward = 0.0
-            for _ in range(self.current_frame_skip):
-                new_obs, reward, done, info = env.step(action)
-                cumulative_reward += reward
-                if done:
-                    break
-
-            # Update reward for frame skipping logic
-            self._dynamic_frame_skip_update(cumulative_reward)
-
-            # Store transition in replay buffer
-            self._store_transition(self._last_obs, buffer_action, cumulative_reward, new_obs, done)
-            self._last_obs = new_obs
-
-            if done:
-                self._last_obs = None  # Force env reset
-
-            n_steps += 1
-
-        return n_steps
 
 def create_dynamic_frame_skip_dqn(env, **kwargs):
     """

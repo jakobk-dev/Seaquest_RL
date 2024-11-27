@@ -5,7 +5,7 @@ from baselines.deepq.replay_buffer import PrioritizedReplayBuffer
 from stable_baselines3.common.policies import BasePolicy
 from torch import optim
 
-
+# Currently, this algorithm was not run or implmented with a graph in the paper.
 class PrioritizedExperienceReplayDQN(DQN):
     """
     DQN with Prioritized Experience Replay (PER).
@@ -65,9 +65,6 @@ class PrioritizedExperienceReplayDQN(DQN):
         self.replay_buffer = PrioritizedReplayBuffer(
             buffer_size,
             alpha=self.alpha,
-            beta_initial=self.beta,
-            beta_schedule=self.beta_schedule,
-            gamma=self.gamma,
         )
 
     def train(self, gradient_steps: int, batch_size: int = 64) -> None:
@@ -78,11 +75,14 @@ class PrioritizedExperienceReplayDQN(DQN):
 
         for _ in range(gradient_steps):
             # Sample a batch from the prioritized replay buffer
-            replay_data = self.replay_buffer.sample(batch_size, beta=self.beta_schedule.value(self._n_calls))
+            replay_data = self.replay_buffer.sample(batch_size, beta=self.beta)
 
             with torch.no_grad():
-                # Compute the target Q-values
-                next_q_values = self.policy.q_net_target(replay_data.next_observations).max(1)[0].reshape(-1, 1)
+                # Compute the next actions using the policy network
+                next_actions = self.policy.q_net(replay_data.next_observations).argmax(dim=1).reshape(-1, 1)
+
+                # Compute the target Q-values using the target network
+                next_q_values = self.policy.q_net_target(replay_data.next_observations).gather(1, next_actions).reshape(-1, 1)
                 target_q_values = replay_data.rewards + (1 - replay_data.dones) * self.gamma * next_q_values
 
             # Get current Q-values for the sampled actions
@@ -96,6 +96,8 @@ class PrioritizedExperienceReplayDQN(DQN):
 
             # Compute the importance sampling weights
             weights = torch.tensor(replay_data.weights).to(self.device)
+
+            # Compute the loss with weighted TD errors
             loss = (weights * F.smooth_l1_loss(current_q_values, target_q_values, reduction='none')).mean()
 
             # Optimize the policy

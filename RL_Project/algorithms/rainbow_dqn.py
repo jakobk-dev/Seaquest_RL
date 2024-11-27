@@ -10,6 +10,7 @@ class RainbowDQN(DQN):
     """
     Rainbow DQN combines Double Q-Learning, Prioritized Replay, Dueling Architecture,
     Multi-step Learning, Noisy Networks, and Distributional RL.
+    Currently, this algorithm was not run or implmented with a graph in the paper.
     """
     def __init__(
         self,

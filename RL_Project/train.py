@@ -13,6 +13,9 @@ from stable_baselines3.common.vec_env import DummyVecEnv, VecTransposeImage
 from stable_baselines3.common.atari_wrappers import AtariWrapper, EpisodicLifeEnv, FireResetEnv
 from stable_baselines3.common.vec_env import VecFrameStack
 
+# In this file, change the path to whichever path is needed to store.
+# When running in Google Colab the path will be different from when running locally.
+
 def create_env(log_path):
     gym.register_envs(ale_py)
     env = gym.make("ALE/Seaquest-v5")
@@ -29,7 +32,7 @@ def create_env(log_path):
 def setup_logging_and_monitoring(model_name):
     # Create directory structure
     log_dir = os.path.join("logs", model_name)
-    model_dir = os.path.join("/content/drive/MyDrive", "models", model_name)
+    model_dir = os.path.join("/home/noamg/deeprl", "models", model_name)
     eval_dir = os.path.join("logs", "eval", model_name)
     
     for d in [log_dir, model_dir, eval_dir]:
@@ -76,7 +79,7 @@ def train_and_eval_dqn(model, env, total_timesteps=20000, model_name="model"):
     )
 
     # Save final model
-    models_dir = "/content/drive/MyDrive/models"
+    models_dir = "/home/noamg/deeprl/models"
     os.makedirs(models_dir, exist_ok=True)
     model_path = os.path.join(models_dir, model_name)
     model.save(model_path)

@@ -1,24 +1,71 @@
 import torch
 import torch.nn.functional as F
 from stable_baselines3 import DQN
+from stable_baselines3.dqn.policies import DQNPolicy
 from stable_baselines3.common.policies import BasePolicy
 from torch import optim
+import gym
 import numpy as np
+
+# Currently, this algorithm was not run or implmented with a graph in the paper.
+class ActionRepetitionMapper:
+    """
+    Maps action indices to (action, repetition) pairs and vice versa.
+    """
+    def __init__(self, num_actions, repetition_factors):
+        self.num_actions = num_actions
+        self.repetition_factors = repetition_factors
+        self.action_repetition_pairs = [
+            (action, repetition)
+            for action in range(num_actions)
+            for repetition in repetition_factors
+        ]
+        self.total_actions = len(self.action_repetition_pairs)
+
+    def get_action_repetition(self, action_index):
+        return self.action_repetition_pairs[action_index]
+
+    def get_action_index(self, action, repetition):
+        return self.action_repetition_pairs.index((action, repetition))
+
+
+class ActionRepetitionEnvWrapper(gym.Wrapper):
+    """
+    Environment wrapper that handles action repetitions.
+    """
+    def __init__(self, env, repetition_factors):
+        super().__init__(env)
+        self.repetition_factors = repetition_factors
+        self.num_actions = env.action_space.n
+        self.mapper = ActionRepetitionMapper(self.num_actions, repetition_factors)
+        # Adjust the action space to include action repetitions
+        self.action_space = gym.spaces.Discrete(self.mapper.total_actions)
+
+    def step(self, action_index):
+        action, repetition = self.mapper.get_action_repetition(action_index)
+        total_reward = 0.0
+        done = False
+        info = {}
+        for _ in range(repetition):
+            obs, reward, done, info = self.env.step(action)
+            total_reward += reward
+            if done:
+                break
+        return obs, total_reward, done, info
+
+    def reset(self, **kwargs):
+        return self.env.reset(**kwargs)
 
 
 class DynamicActionRepetitionDQN(DQN):
     """
-    Dynamic Action Repetition DQN modifies the interaction with the environment
-    to dynamically adjust the number of times an action is repeated during training.
+    Dynamic Action Repetition DQN agent that extends DQN to handle action repetitions.
     """
     def __init__(
         self,
         policy,
         env,
-        min_action_repeats=1,
-        max_action_repeats=5,
-        adjustment_threshold=10,
-        reward_sensitivity=0.1,
+        repetition_factors=[1, 2, 4],
         learning_rate=1e-4,
         buffer_size=30000,
         batch_size=64,
@@ -37,6 +84,8 @@ class DynamicActionRepetitionDQN(DQN):
         device="auto",
         _init_setup_model=True,
     ):
+        # Wrap the environment
+        env = ActionRepetitionEnvWrapper(env, repetition_factors)
         super().__init__(
             policy=policy,
             env=env,
@@ -58,70 +107,15 @@ class DynamicActionRepetitionDQN(DQN):
             device=device,
             _init_setup_model=_init_setup_model,
         )
+        self.repetition_factors = repetition_factors
+        self.num_actions = env.unwrapped.action_space.n
+        self.mapper = env.mapper
 
-        # Dynamic Action Repetition Parameters
-        self.min_action_repeats = min_action_repeats
-        self.max_action_repeats = max_action_repeats
-        self.adjustment_threshold = adjustment_threshold
-        self.reward_sensitivity = reward_sensitivity
-
-        self.current_action_repeats = min_action_repeats
-        self.last_rewards = []
-
-    def _adjust_action_repetition(self, reward):
-        """
-        Adjusts the number of times an action is repeated based on the reward feedback.
-        """
-        self.last_rewards.append(reward)
-        if len(self.last_rewards) > self.adjustment_threshold:
-            avg_reward = np.mean(self.last_rewards[-self.adjustment_threshold:])
-            delta_reward = avg_reward - np.mean(self.last_rewards[:-self.adjustment_threshold])
-            if delta_reward > self.reward_sensitivity:
-                self.current_action_repeats = min(self.current_action_repeats + 1, self.max_action_repeats)
-            elif delta_reward < -self.reward_sensitivity:
-                self.current_action_repeats = max(self.current_action_repeats - 1, self.min_action_repeats)
-
-    def collect_rollouts(self, env, callback, train_freq, replay_buffer, action_noise=None, learning_starts=0):
-        """
-        Collect rollouts with dynamic action repetition during environment interaction.
-        """
-        n_steps = 0
-        action_noise = self.policy.action_noise if action_noise is None else action_noise
-
-        while n_steps < train_freq:
-            # Reset the environment if done
-            if self._last_obs is None:
-                self._last_obs = env.reset()
-
-            # Predict the next action
-            with torch.no_grad():
-                action, buffer_action = self.predict(self._last_obs, deterministic=False)
-
-            # Take the action repeatedly and accumulate rewards
-            cumulative_reward = 0.0
-            for _ in range(self.current_action_repeats):
-                new_obs, reward, done, info = env.step(action)
-                cumulative_reward += reward
-                if done:
-                    break
-
-            # Adjust the action repetition based on the cumulative reward
-            self._adjust_action_repetition(cumulative_reward)
-
-            # Store the transition in the replay buffer
-            self._store_transition(self._last_obs, buffer_action, cumulative_reward, new_obs, done)
-            self._last_obs = new_obs
-
-            if done:
-                self._last_obs = None  # Force environment reset
-
-            n_steps += 1
-
-        return n_steps
+    # Optionally, you can override methods or add additional methods if necessary
 
 
 def create_dynamic_action_repetition_dqn(env, **kwargs):
     """
     Factory function to create a Dynamic Action Repetition DQN agent.
     """
-    return DynamicActionRepetitionDQN("CnnPolicy", env, **kwargs)
+    return DynamicActionRepetitionDQN("MlpPolicy", env, **kwargs)
