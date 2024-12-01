@@ -7,8 +7,7 @@ from stable_baselines3.common.policies import BasePolicy
 class DoubleDynamicFrameSkipDQN(DQN):
     """
     DQN implementation that combines Double DQN to reduce overestimation bias
-    and Dynamic Frame Skipping, adjusting frame skip dynamically based on TD error.
-    Improved version. Yet to run this, after doing this change hyperparameters again and then use noisynet only incorperated and run it then change hyper paramters.
+    and Dynamic Frame Skipping which adjusts the frame skip dynamically during training based on the TD error.
     """
     def __init__(
         self,
@@ -18,18 +17,17 @@ class DoubleDynamicFrameSkipDQN(DQN):
         max_frame_skip=4,
         frame_skip_increment=1,
         td_error_threshold=1.0,
-        frame_skip_update_rate=1,
-        learning_rate=1e-3,
-        buffer_size=100000,
-        batch_size=128,
+        learning_rate=1e-4,
+        buffer_size=50000,
+        batch_size=64,
         tau=1.0,
         gamma=0.99,
-        train_freq=8,
-        gradient_steps=2,
-        target_update_interval=5000,
-        exploration_fraction=0.2,
+        train_freq=4,
+        gradient_steps=1,
+        target_update_interval=10000,
+        exploration_fraction=0.1,
         exploration_initial_eps=1.0,
-        exploration_final_eps=0.02,
+        exploration_final_eps=0.05,
         max_grad_norm=10,
         tensorboard_log=None,
         policy_kwargs=None,
@@ -62,9 +60,8 @@ class DoubleDynamicFrameSkipDQN(DQN):
         self.max_frame_skip = max_frame_skip
         self.frame_skip_increment = frame_skip_increment
         self.td_error_threshold = td_error_threshold
-        self.frame_skip_update_rate = frame_skip_update_rate  # Prevent excessive adjustments
 
-    def train(self, gradient_steps: int, batch_size: int = 128) -> None:
+    def train(self, gradient_steps: int, batch_size: int = 64) -> None:
         """
         Override the DQN train method to implement Double Q-Learning updates and Dynamic Frame Skipping.
         """
@@ -104,13 +101,11 @@ class DoubleDynamicFrameSkipDQN(DQN):
             if self._n_calls % self.target_update_interval == 0:
                 self.policy.q_net_target.load_state_dict(self.policy.q_net.state_dict())
 
-            # Adjust frame skip based on TD error (rate-limited updates)
-            if self._n_calls % self.frame_skip_update_rate == 0:
-                if td_error_mean > self.td_error_threshold and self.current_frame_skip < self.max_frame_skip:
-                    self.current_frame_skip += self.frame_skip_increment
-                elif td_error_mean < self.td_error_threshold and self.current_frame_skip > 1:
-                    self.current_frame_skip -= self.frame_skip_increment
-                self.current_frame_skip = max(1, min(self.current_frame_skip, self.max_frame_skip))
+            # Adjust frame skip based on TD error
+            if td_error_mean > self.td_error_threshold and self.current_frame_skip < self.max_frame_skip:
+                self.current_frame_skip += self.frame_skip_increment
+            elif td_error_mean < self.td_error_threshold and self.current_frame_skip > 1:
+                self.current_frame_skip -= self.frame_skip_increment
 
             # Update the environment's frame skip
             if hasattr(self.env, 'set_frame_skip'):

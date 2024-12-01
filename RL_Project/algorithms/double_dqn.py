@@ -6,7 +6,7 @@ from torch import optim
 import numpy as np
 
 
-class ImprovedDoubleDQN(DQN):
+class ImprovedLongDoubleDQN(DQN):
     """
     Double DQN with improvements: Noisy exploration and optimized hyperparameters.
     """
@@ -99,7 +99,6 @@ def create_double_dqn(env, **kwargs):
     policy_kwargs = dict(
         net_arch=[256, 256],  # Deeper network for better representation
         activation_fn=torch.nn.ReLU,
-        # use_noisy_net=True,  # Use noisy networks for exploration
     )
     kwargs['policy_kwargs'] = policy_kwargs
-    return ImprovedDoubleDQN("CnnPolicy", env, **kwargs)
+    return ImprovedLongDoubleDQN("CnnPolicy", env, **kwargs)
